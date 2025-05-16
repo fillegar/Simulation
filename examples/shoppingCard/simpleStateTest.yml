@@ -1,0 +1,70 @@
+schema: SimV1
+
+connections:
+    - endpoint: http://localhost:17079/api/cart
+      listen: false
+      name: ShoppingCartOutConnection
+services:
+  - description: Create a new shopping cart
+    name: CreateCartTest
+    steps:
+      - direction: Out
+        name: addCartRequestTest
+        from: ShoppingCartOutConnection
+        insert:
+          - type: Path
+            value: /cart/create 
+        message:
+          method: POST
+      - direction: In
+        name: addCartResponseTest
+  
+  - description: Update item in cart
+    name: UpdateCartTest
+    steps:
+      - direction: Out
+        name: updateCartRequestTest
+        from: ShoppingCartOutConnection
+        insert:
+          - type: Path
+            value: /cart/CARTID
+        message:
+          method: PUT
+          payload: |
+            {
+              "itemId": "12345",
+              "itemDesc": "nothing",
+              "quantity": 1
+            }
+      - direction: In
+        name: updateCartResponseTest
+  
+  - description: Get Cart
+    name: GetCartTest
+    steps:
+      - direction: Out
+        name: GetCartRequestTest
+        from: ShoppingCartOutConnection
+        insert:
+          - type: Path
+            value: /cart/CARTID 
+        message:
+          method: GET
+
+      - direction: In
+        name: updateCartResponseTest
+  
+  - description: Delete Cart
+    name: DeleteCartTest
+    steps:
+      - direction: Out
+        name: DeleteCartRequestTest
+        from: ShoppingCartOutConnection
+        insert:
+          - type: Path
+            value: /cart/CARTID 
+        message:
+          method: DELETE
+
+      - direction: In
+        name: deleteCartResponseTest

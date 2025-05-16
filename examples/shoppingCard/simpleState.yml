@@ -1,0 +1,168 @@
+schema: SimV1
+name: ShoppingCartService
+resources:
+  - name: cart
+    type: Table
+    file: cart.csv  # Path to the file storing cart data (could be a CSV or SQLite database)
+
+connections:
+  - port: 17079
+    listen: true
+    name: ShoppingCartInConnection
+
+services:
+  - description: Create a new shopping cart
+    name: CreateCartSim
+    steps:
+      - direction: In
+        name: addCartSimRequest
+        from: ShoppingCartInConnection
+        trigger:
+          - type: Uri
+            value: /cart/create
+          - property: Method
+            value: POST
+        buffer:
+          - name: cartId
+            value: "{RND[5]}" 
+      - direction: Out
+        name: addCartSimResponse
+        message:
+          headers:
+            - key: Content-Type
+              value: application/json
+          payload: |
+            {
+              "message": "Cart Created",
+              "cartId": "0"
+            }
+        insert:
+          - jsonPath: cartId
+            value: '{b[cartId]}'
+        resource:
+          insert:
+            - ref: cart
+              value: 
+                [ 
+                  "{b[cartId]}",
+                   "",
+                   "",
+                   ""
+                ]
+
+  - description: update item in shopping cart
+    name: updateCart
+    steps:
+      - direction: In
+        name: updateCartSimRequest
+        from: ShoppingCartInConnection
+        trigger:
+          - type: Path
+            value: /cart/*
+          - property: Method
+            value: PUT
+        buffer:
+          - type: Path
+            value: cart/{XB[cartId]}
+          - name: itemId
+            jsonPath: itemId
+          - name: itemDesc
+            jsonPath: itemDesc
+          - name: quantity
+            jsonPath: quantity
+      - direction: Out
+        name: updateCartSimResponse
+        message:
+          headers:
+            - key: Content-Type
+              value: application/json
+          payload: |
+            {
+              "message": "Cart Updated",
+              "cartId": "",
+              "itemId": "",
+              "itemDesc": "",
+              "quantity": ""
+            }
+        insert:
+          - jsonPath: cartId
+            value: '{b[cartId]}'
+          - jsonPath: itemId
+            value: '{b[itemId]}'
+          - jsonPath: itemDesc
+            value: '{b[itemDesc]}'
+          - jsonPath: quantity
+            value: '{b[quantity]}'
+        resource:
+          update:
+            - ref: cart
+              where: cartId=='{b[cartId]}'
+              value: 
+                itemId: '{b[itemId]}'
+                itemDesc: '{b[itemDesc]}'
+                quantity: '{b[quantity]}'
+
+  - description: Get the details of the shopping cart
+    name: getCart
+    steps:
+      - direction: In
+        name: getCartSimRequest
+        from: ShoppingCartInConnection
+        trigger:
+          - type: Path
+            value: /cart/*
+          - property: Method
+            value: GET
+        buffer:
+          - type: Path
+            value: cart/{XB[cartId]}
+      - direction: Out
+        resource:
+              read:
+              - ref: cart
+                where: cartId=='{b[cartId]}'
+                name: currentCart
+        message:
+          headers:
+            - key: Content-Type
+              value: application/json
+          payload: |
+            {
+              "message": "Cart Details",
+              "cartId": "%{currentCart.cartId}",
+              "itemId": "%{currentCart.itemId}",
+              "itemDesc": "%{currentCart.itemDesc}",
+              "quantity": %{currentCart.quantity}
+            }
+      
+  - description: Delete the shopping cart
+    name: deleteCart
+    steps:
+      - direction: In
+        name: deleteCartSimRequest
+        from: ShoppingCartInConnection
+        trigger:
+          - type: Path
+            value: /cart/*
+          - property: Method
+            value: DELETE
+        buffer:
+          - type: Path
+            value: cart/{XB[cartId]}
+
+      - direction: Out
+        name: deleteCartSimResponse
+        message:
+          headers:
+            - key: Content-Type
+              value: application/json
+          payload: |
+            {
+              "message": "Cart Deleted",
+              "cartId": "0"
+            }
+        resource:
+          delete:
+            - ref: cart
+              where: cartId=='{b[cartId]}'
+
