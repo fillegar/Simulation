@@ -1,0 +1,16 @@
+schema: SimV1
+connections:
+- forward:
+    learning:
+      patterns:
+      - type: Path
+        value: /carservice
+      - xPath: /*[local-name()='Envelope']/*[local-name()='Body']/*[local-name()='getCar']/*[local-name()='make']
+    mode: Learning
+    to: realCarService
+  name: theCarServiceSimLearnings
+  port: 54345
+
+- endpoint: http://localhost:51002/carservice
+  listen: false
+  name: realCarService
