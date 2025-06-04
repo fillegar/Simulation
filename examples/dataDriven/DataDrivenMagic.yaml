@@ -1,0 +1,79 @@
+schema: SimV1
+resources:
+- file: hpCharacters.csv
+  name: hpcharacters
+connections:
+- name: datadrivenconnection
+  port: 26414
+- endpoint: http://localhost:26414
+  listen: false
+  name: ToMagicEndpoint
+services:
+- name: MagicUsersService
+  steps:
+  - buffer:
+    - type: Path
+      value: magic/{XB[id]}
+    direction: In
+    from: datadrivenconnection
+    name: getMagicUserVSRequest
+    trigger:
+    - type: Path
+      value: /magic/*
+  - direction: Out
+    insert:
+    - jsonPath: Name
+      value: "{from[hpcharacters][Name][id='{B[id]}']}"
+    - jsonPath: Gender
+      value: "{from[hpcharacters][Gender][id='{B[id]}']}"
+    - jsonPath: Job
+      value: "{from[hpcharacters][Job][id='{B[id]}']}"
+    - jsonPath: House
+      value: "{from[hpcharacters][House][id='{B[id]}']}"
+    - jsonPath: Wand
+      value: "{from[hpcharacters][Wand][id='{B[id]}']}"
+    - jsonPath: Patronus
+      value: "{from[hpcharacters][Patronus][id='{B[id]}']}"
+    - jsonPath: Species
+      value: "{from[hpcharacters][Species][id='{B[id]}']}"
+    - jsonPath: Loyalty
+      value: "{from[hpcharacters][Loyalty][id='{B[id]}']}"
+    - jsonPath: Skills
+      value: "{from[hpcharacters][Skills][id='{B[id]}']}"
+    - jsonPath: Birth
+      value: "{from[hpcharacters][Birth][id='{B[id]}']}"
+    - jsonPath: Death
+      value: "{from[hpcharacters][Death][id='{B[id]}']}"
+    message:
+      payload: |-
+        {
+          "Id": 1,
+          "Name": "Harry James Potter",
+          "Gender": "Male",
+          "Job": "Student",
+          "House": "Gryffindor",
+          "Wand": "11\"  Holly  phoenix feather",
+          "Patronus": "Stag",
+          "Species": "Human",
+          "Blood status": "Half-blood",
+          "Hair colour": "Black",
+          "Eye colour": "Bright green",
+          "Loyalty": "Albus Dumbledore | Dumbledore's Army | Order of the Phoenix | Hogwarts School of Witchcraft and Wizardry",
+          "Skills": "Parseltongue| Defence Against the Dark Arts | Seeker",
+          "Birth": "31 July 1980",
+          "Death": "\t\t\t\t\t\t"
+        }
+    name: getMagicUserVSResponse
+- name: CallMagicUsersService
+  steps:
+  - direction: Out
+    insert:
+    - type: Path
+      value: /magic/1
+    name: getMagicUser
+    to: ToMagicEndpoint
+  - direction: In
+    name: Recieve magic response
+    verify:
+    - property: StatusCode
+      value: 200 OK

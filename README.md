@@ -21,7 +21,9 @@ This repository includes hands-on examples that illustrate how to use Tricentis 
 
  Folder  Description 
 ---------------------
- `examples/shoppingCard`  Simulates a shopping card service. 
+ `examples/shoppingCart`  Simulates a shopping cart service. 
+ `examples/carServiceDemo`  Simulates a car service. 
+ `examples/dataDriven`  Simulates a service based on data provided in a CSV file.
 
 Each folder contains
 - Simulation configuration files.
